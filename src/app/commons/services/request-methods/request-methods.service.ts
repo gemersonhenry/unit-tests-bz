@@ -3,6 +3,7 @@ import { HttpClient, HttpErrorResponse, HttpResponse } from '@angular/common/htt
 
 import { catchError } from 'rxjs/operators';
 import { throwError, Observable } from 'rxjs';
+import { IGlobalErrorResponse, IErrorResponseModel } from '../contansts/global-interface';
 
 @Injectable()
 export class RequestMethodsService {
@@ -21,11 +22,6 @@ export class RequestMethodsService {
           params: {},
           responseType: 'json'
         },
-      )
-      .pipe(
-        catchError((error: HttpErrorResponse) => {
-          return throwError(error);
-        })
       );
   }
 
@@ -42,11 +38,21 @@ export class RequestMethodsService {
           params: {},
           responseType: 'json'
         }
-      )
-      .pipe(
-        catchError((error: HttpErrorResponse) => {
-          return throwError(error);
-        })
       );
+  }
+
+  /**
+   * ESte metodo se agregará de ls siguiente manera
+   * "pipe(catchError(requestMethods.catchErrorResolution))"
+   */
+  public catchErrorResolution(error: HttpErrorResponse): Observable<IGlobalErrorResponse<IErrorResponseModel>> {
+    return new Observable<IGlobalErrorResponse<IErrorResponseModel>>((observer) => {
+      observer.next({
+        status: error.status,
+        error: {
+          errorMessage: error.message,
+        },
+      });
+    });
   }
 }

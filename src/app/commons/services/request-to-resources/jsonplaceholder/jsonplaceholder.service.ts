@@ -1,27 +1,26 @@
 import { Injectable } from '@angular/core';
 import { GLOBAL_APIS } from '../../contansts/global-apis';
 import { RequestMethodsService } from '../../request-methods/request-methods.service';
-import { map } from 'rxjs/operators';
+import { map, catchError } from 'rxjs/operators';
 import { Post } from './jsonplaceholder.model';
-import { HttpResponse } from '@angular/common/http';
+import { HttpResponse, HttpErrorResponse } from '@angular/common/http';
 import { IPostResponse } from './jsonplaceholder.interface';
-import { Observable } from 'rxjs';
-import { IGlobalResponse } from '../../contansts/global-interface';
+import { Observable, throwError } from 'rxjs';
+import { IGlobalSuccessfulResponse, IGlobalErrorResponse, IErrorResponseModel } from '../../contansts/global-interface';
 
 @Injectable()
 export class JsonplaceholderService {
 
   private readonly url = GLOBAL_APIS.JSON_PLACE_HOLDER;
-  private readonly url2 = GLOBAL_APIS.JSON_PLACE_HOLDER_2;
 
   constructor(
     private requestMethods: RequestMethodsService,
   ) { }
 
   public getPosts() {
-    return new Observable<IGlobalResponse<Post[]>>((observer) => {
+    return new Observable<IGlobalSuccessfulResponse<Post[]>>((observer) => {
       this.requestMethods
-      .getMethod<Post[]>(this.url2)
+      .getMethod<Post[]>(this.url)
       .pipe(
         map((response: HttpResponse<IPostResponse[]>) => {
           const body = response.body.map((post) => new Post(post));
@@ -34,7 +33,22 @@ export class JsonplaceholderService {
     });
   }
 
-  public getPosts2() {
-    return this.requestMethods.getMethod(this.url2);
+  /**
+   * Método para homologar todas las peticiones
+   */
+  public formatResponse(): Observable<IGlobalSuccessfulResponse<Post[]> | IGlobalErrorResponse<IErrorResponseModel>> {
+    return this.requestMethods
+      .getMethod<Post[]>(this.url + 'o')
+      .pipe(
+        map((response: HttpResponse<IPostResponse[]>) => {
+          const body = response.body.map((post) => new Post(post));
+          return {
+            data: body,
+            status: response.status,
+          } as IGlobalSuccessfulResponse<Post[]>;
+        })
+      )
+      .pipe(catchError(this.requestMethods.catchErrorResolution));
   }
+
 }
