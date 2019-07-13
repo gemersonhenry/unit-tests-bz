@@ -14,7 +14,7 @@ export class AppComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    this.jsonplaceholderService.formatResponse().subscribe(res => {
+    this.jsonplaceholderService.getAllPosts().subscribe(res => {
       console.log(res);
     });
   }
